@@ -29,14 +29,14 @@ def SquareMethod(_height, _width, _inner):
     print result
 
 def FaceMethod():
-    radius = 50
+    diameter = 20
     result = ""
-    for i in range(0, radius):
-        for j in range(0, radius):
-            di = i - radius / 2
-            dj = j - radius / 2
+    for i in range(0, diameter):
+        for j in range(0, diameter):
+            di = i - diameter / 2
+            dj = j - diameter / 2
             dist = math.sqrt( (di * di) + (dj * dj) )
-            if dist < radius / 2 and dist > radius / 2.6:
+            if dist < diameter / 2 and dist > diameter / 2.6:
                 result += "*"
             else:
                 if (di == -2) and (abs(dj) == 4): # Eyes
