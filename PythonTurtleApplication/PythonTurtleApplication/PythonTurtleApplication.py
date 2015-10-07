@@ -1,4 +1,4 @@
-from Start import *
+﻿from Start import *
 
 #For this assigment you are asked to use the drawing facilities of python provided by the turtle library.
 #For simplicity we provide you an interfae that hides the complexitie of the turtule library.
