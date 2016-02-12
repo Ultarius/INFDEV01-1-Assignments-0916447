@@ -49,7 +49,7 @@ type LogicSystem() =
                     let rec updateEntity components (entity : GenericEntity) = 
                         match components with
                             | [] -> entity
-                            | Position(x = xPos; y = yPos)::xs -> updateEntity xs {entity with Components = [Position(xPos + 2.0f, yPos)]}; 
+                            | Position(x = xPos; y = yPos)::xs -> updateEntity xs {entity with Components = [Position(xPos + 2.0f, yPos)] @ xs}; 
                             | _::xs -> updateEntity xs entity
                     updateEntity e.Components e 
             )}
