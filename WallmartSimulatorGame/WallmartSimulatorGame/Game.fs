@@ -11,9 +11,6 @@ type Component =
     | Position of x : float32 * y : float32
     | Bounds of width : float32 * height : float32
 
-//type Systi = 
-//    | Logic of Update : function * y : float32
-
 
 type GenericEntity =
     {
@@ -84,14 +81,17 @@ type OtherSystem() =
    inherit ISystem()
 
    override u.Update (world : World) =
-        { world with Entities = world.Entities |> List.map(fun e -> e
-
+        { world with Entities = world.Entities |> List.map(fun e ->
+                    let rec updateEntity components (entity : GenericEntity) = 
+                        match components with
+                            | [] -> entity
+                            | Position(x = xPos; y = yPos)::xs -> updateEntity xs {entity with Components = [Position(xPos, yPos + 1.0f)] @ xs}; 
+                            | _::xs -> updateEntity xs entity
+                    updateEntity e.Components e
             )}
    override u.Draw (world : World) (texture : Texture2D) (spriteBatch : SpriteBatch) =
         world.Entities |> List.iter(fun e -> e.Components |> List.iter(fun c -> ()
             ))
-
-
 
 (*
 let rec updateEntity components entity
@@ -156,7 +156,7 @@ type WallmartSimulator() as this =
 
         GameState <-{ GameState with 
                         Entities = [a]
-                        Systems = [new LogicSystem(); new OtherSystem()]
+                        Systems = [new OtherSystem(); new LogicSystem();]
                     }
 
         //State <- MainUpdate State
@@ -165,12 +165,15 @@ type WallmartSimulator() as this =
  
     override this.Update (gameTime) =
 
-        let rec worldLoop (systems : ISystem list) world = // Find out a better solution to this.
+        (* let rec worldLoop (systems : ISystem list) world = // Find out a better solution to this. =D
             match systems with
             | [] -> world
-            | x::xs -> worldLoop xs (x.Update world);
+            | x::xs -> worldLoop xs (x.Update world); *)
 
-        GameState <- worldLoop GameState.Systems GameState
+
+        let newWorld = GameState.Systems |> List.fold (fun s system -> system.Update s) GameState
+
+        GameState <- newWorld
 
         //let newWorld = GameState.Systems |> List.map(fun s -> s.Update s GameState) |> Seq.head
 
