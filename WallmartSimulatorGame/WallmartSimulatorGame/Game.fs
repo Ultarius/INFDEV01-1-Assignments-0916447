@@ -47,6 +47,21 @@ and World =
 
 type LogicSystem() =
    inherit ISystem()
+
+   let updatePosition (entity : GenericEntity) = 
+
+    let positionX, positionY, p = entity.Components |> List.pick (fun c ->
+                        match c with
+                        | Position(x = xPos; y = yPos) -> Some(xPos, yPos, true)
+                        | _ -> None)
+
+    if Keyboard.GetState().IsKeyDown(Keys.A) && p then
+        {entity with Components = [Position(positionX - 4.0f, positionY)]}
+    elif Keyboard.GetState().IsKeyDown(Keys.D) && p then
+        {entity with Components = [Position(positionX + 2.0f, positionY)]}
+    else
+        entity
+
    override u.Update (system : ISystem) (world : World) =
         { world with Entities = world.Entities |> List.map(fun e ->
                     let rec updateEntity components (entity : GenericEntity) = 
@@ -54,7 +69,8 @@ type LogicSystem() =
                             | [] -> entity
                             | Position(x = xPos; y = yPos)::xs -> updateEntity xs {entity with Components = [Position(xPos + 2.0f, yPos)] @ xs}; 
                             | _::xs -> updateEntity xs entity
-                    updateEntity e.Components e 
+                    let updatedEntity = updatePosition e
+                    updateEntity updatedEntity.Components updatedEntity
             )}
    override u.Draw (system : ISystem) (world : World) (texture : Texture2D) (spriteBatch : SpriteBatch) =
         world.Entities |> List.iter(fun e -> e.Components |> List.iter(fun c -> 
