@@ -11,6 +11,9 @@ type Component =
     | Position of x : float32 * y : float32
     | Bounds of width : float32 * height : float32
 
+//type Systi = 
+//    | Logic of Update : function * y : float32
+
 
 type GenericEntity =
     {
@@ -134,10 +137,17 @@ type WallmartSimulator() as this =
  
     override this.Update (gameTime) =
 
-    
-        let newWorld = GameState.Systems |> List.map(fun s -> s.Update s GameState) |> Seq.head
+        
+        let rec worldLoop (systems : ISystem list) world = // Find out a better solution to this.
+            match systems with
+            | [] -> world
+            | x::xs -> worldLoop xs (x.Update x GameState);
 
-        GameState <- newWorld
+        GameState <- worldLoop GameState.Systems GameState
+
+        //let newWorld = GameState.Systems |> List.map(fun s -> s.Update s GameState) |> Seq.head
+
+        //GameState <- newWorld
         
 
     override this.Draw (gameTime) =
