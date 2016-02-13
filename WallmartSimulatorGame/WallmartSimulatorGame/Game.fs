@@ -29,10 +29,10 @@ type GenericEntity =
 
 
 type ISystem() =
-   abstract member Update   : ISystem -> World -> World
-   abstract member Draw     : ISystem -> World -> Texture2D -> SpriteBatch -> unit
-   default u.Update (system : ISystem) (world : World) = world;
-   default u.Draw (system : ISystem) (world : World) (texture : Texture2D) (spriteBatch : SpriteBatch) = ();
+   abstract member Update   : World -> World
+   abstract member Draw     : World -> Texture2D -> SpriteBatch -> unit
+   default u.Update (world : World) = world;
+   default u.Draw (world : World) (texture : Texture2D) (spriteBatch : SpriteBatch) = ();
 and World =
     {
         Entities    : GenericEntity list
@@ -40,9 +40,9 @@ and World =
         Systems     : ISystem list
     }
     static member Update (world : World) =
-        world.Systems |> List.map(fun s -> s.Update s world)
+        world.Systems |> List.map(fun s -> s.Update world)
     static member Draw (world : World) (texture : Texture2D) (spriteBatch : SpriteBatch) =
-        world.Systems |> List.iter(fun s -> s.Draw s world texture spriteBatch);
+        world.Systems |> List.iter(fun s -> s.Draw world texture spriteBatch);
 
 
 type LogicSystem() =
@@ -62,7 +62,7 @@ type LogicSystem() =
     else
         entity
 
-   override u.Update (system : ISystem) (world : World) =
+   override u.Update (world : World) =
         { world with Entities = world.Entities |> List.map(fun e ->
                     let rec updateEntity components (entity : GenericEntity) = 
                         match components with
@@ -72,11 +72,23 @@ type LogicSystem() =
                     let updatedEntity = updatePosition e
                     updateEntity updatedEntity.Components updatedEntity
             )}
-   override u.Draw (system : ISystem) (world : World) (texture : Texture2D) (spriteBatch : SpriteBatch) =
+   override u.Draw (world : World) (texture : Texture2D) (spriteBatch : SpriteBatch) =
         world.Entities |> List.iter(fun e -> e.Components |> List.iter(fun c -> 
                     match c with
                         | Position(x = xPos; y = yPos) -> spriteBatch.Draw(texture, new Rectangle(int(xPos), int(yPos), 25, 25), Color.White) // Draw Block
                         | _ -> ()
+            ))
+
+
+type OtherSystem() =
+   inherit ISystem()
+
+   override u.Update (world : World) =
+        { world with Entities = world.Entities |> List.map(fun e -> e
+
+            )}
+   override u.Draw (world : World) (texture : Texture2D) (spriteBatch : SpriteBatch) =
+        world.Entities |> List.iter(fun e -> e.Components |> List.iter(fun c -> ()
             ))
 
 
@@ -144,7 +156,7 @@ type WallmartSimulator() as this =
 
         GameState <-{ GameState with 
                         Entities = [a]
-                        Systems = [new LogicSystem()]
+                        Systems = [new LogicSystem(); new OtherSystem()]
                     }
 
         //State <- MainUpdate State
@@ -153,11 +165,10 @@ type WallmartSimulator() as this =
  
     override this.Update (gameTime) =
 
-        
         let rec worldLoop (systems : ISystem list) world = // Find out a better solution to this.
             match systems with
             | [] -> world
-            | x::xs -> worldLoop xs (x.Update x GameState);
+            | x::xs -> worldLoop xs (x.Update world);
 
         GameState <- worldLoop GameState.Systems GameState
 
@@ -175,7 +186,7 @@ type WallmartSimulator() as this =
 
         //State.Map |> List.iteri(fun x tile -> spriteBatch.Draw(tile.Texture tile, new Rectangle(50 + (x % 10 * 30), 50 + (x / 10 * 30), 25, 25), Color.White))
 
-        GameState.Systems |> List.iter(fun s -> s.Draw s GameState texture spriteBatch )
+        GameState.Systems |> List.iter(fun s -> s.Draw GameState texture spriteBatch )
 
         spriteBatch.End()
         
